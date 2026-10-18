@@ -420,7 +420,7 @@ if(!S)S=JSON.parse(JSON.stringify(D0));mig();
 function mig(){S.site.cd=S.site.cd||'2026-12-15T09:00';S.site.cdl=S.site.cdl||'58th Inter-IIT Sports Meet Countdown';S.coach=S.coach||JSON.parse(JSON.stringify(D0.coach));S.alum=S.alum||JSON.parse(JSON.stringify(D0.alum));const R={'1':'Boys Captain','2':'Girls Captain','3':'Boys Vice-Captain','4':'Girls Vice-Captain'};S.ath.forEach(a=>{if(a.role===undefined)a.role=R[a.id]||'';if(!a.dur)a.dur=4});S.ath.forEach(a=>{if(!a.ach)a.ach=(S.med||[]).filter(m=>m[3]===a.name).map(m=>[m[1]+' Medal – '+m[2],m[0],''])});if(!S.site.sess)S.site.sess=curSess()}
 // Paste your deployed Apps Script /exec URL here before publishing if all visitors
 // should automatically load the shared data. Leave blank to configure per browser.
-const PUBLIC_SHEETS_WEB_APP_URL='https://script.google.com/macros/s/AKfycbxwCJ8Bslq0ppkmOd7egWyf5IZJ70aMjLAGiWew4lNc13ZRCKVPNOFH_IZmstAswH422g/exec';
+const PUBLIC_SHEETS_WEB_APP_URL='https://script.google.com/macros/s/AKfycbw2Z-MKEU3GQK8NhsJkuy21UC4IGXX2kvNnHbByFNulIXgBm0JfYftmvpIZ1IBzFSyx4Q/exec';
 const SYNC_CFG_KEY='iitbhu_sheets_config_v1',SYNC_KEY_KEY='iitbhu_sheets_admin_key_v1';
 let syncTimer=null,syncState='Not connected';
 function getSyncConfig(){try{const c=JSON.parse(localStorage.getItem(SYNC_CFG_KEY)||'{}');return {url:c.url||PUBLIC_SHEETS_WEB_APP_URL||''}}catch(e){return {url:PUBLIC_SHEETS_WEB_APP_URL||''}}}
@@ -622,7 +622,7 @@ function login(){$('#modal').innerHTML = `
 }
 
 function authenticateAdmin(pin) {
-  // Replace iitbhu01 with your own PIN.
+  // Replace PassKey with your own PIN.
   if (pin === 'iitbhu01') {
     admin = true;
     closeM();
