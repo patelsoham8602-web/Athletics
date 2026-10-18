@@ -430,7 +430,44 @@ function saveSyncConfig(){const url=(document.querySelector('#gsUrl')?.value||''
 function promptSyncKey(){const key=prompt('Enter the admin sync key configured in Google Apps Script. This key is stored only in this browser.');if(key===null)return;if(!key.trim()){localStorage.removeItem(SYNC_KEY_KEY);setSyncStatus('Admin key cleared; website edits will stay local.');return}localStorage.setItem(SYNC_KEY_KEY,key.trim());setSyncStatus('Admin key saved in this browser. Test with “Publish current website data to Sheet”.');toast('Admin sync key saved')}
 function loadRemoteData(){return new Promise((resolve,reject)=>{const url=getSyncConfig().url;if(!url){reject(new Error('No Google Apps Script URL configured'));return}const cb='__athSheetCb'+Date.now();const script=document.createElement('script');let done=false;const cleanup=()=>{delete window[cb];script.remove()};const timer=setTimeout(()=>{if(done)return;done=true;cleanup();reject(new Error('Timed out loading Google Sheet data'))},15000);window[cb]=(payload)=>{if(done)return;done=true;clearTimeout(timer);cleanup();if(payload&&payload.ok&&payload.data){resolve(payload.data)}else reject(new Error(payload?.error||'Google Sheet returned no data'))};script.onerror=()=>{if(done)return;done=true;clearTimeout(timer);cleanup();reject(new Error('Could not reach Apps Script. Check deployment access and URL.'))};script.src=url+(url.includes('?')?'&':'?')+'action=load&callback='+cb+'&t='+Date.now();document.head.appendChild(script)})}
 async function connectSheets(){saveSyncConfig();const cfg=getSyncConfig();if(!cfg.url)return;setSyncStatus('Loading data from Google Sheet…');try{const remote=await loadRemoteData();if(!remote||!remote.site||!Array.isArray(remote.ath))throw new Error('Sheet data format is invalid');S=remote;mig();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}render();setSyncStatus('Loaded latest data from Google Sheets.');toast('Google Sheets data loaded')}catch(e){setSyncStatus('Load failed: '+e.message);toast('Could not load Google Sheets data')}}
-async function pushSheets(){const url=getSyncConfig().url,key=localStorage.getItem(SYNC_KEY_KEY);if(!url){toast('Save the Apps Script URL first');return}if(!key){promptSyncKey();return}setSyncStatus('Publishing website data to Google Sheets…');try{await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'save',token:key,data:S})});setSyncStatus('Publish request sent. Reload from Google Sheets to verify it was accepted.');toast('Publish request sent')}catch(e){setSyncStatus('Publish failed: '+e.message);toast('Could not publish data')}}
+
+async function pushSheets() {
+  const url = getSyncConfig().url;
+  const key = localStorage.getItem(SYNC_KEY_KEY);
+
+  if (!url) {
+    setSyncStatus('Save the Apps Script URL first.');
+    return;
+  }
+
+  if (!key) {
+    promptSyncKey();
+    return;
+  }
+
+  setSyncStatus('Publishing data to Google Sheets...');
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append('action', 'save');
+    formData.append('token', key);
+    formData.append('payload', JSON.stringify(S));
+
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formData
+    });
+
+    setSyncStatus(
+      'Request sent. Check Google Sheets to verify the data.'
+    );
+
+  } catch (err) {
+    setSyncStatus('Publish failed: ' + String(err.message || err));
+  }
+}
+
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Storage full - remove some uploaded photos or use Drive links instead')}const cfg=getSyncConfig();if(cfg.url&&localStorage.getItem(SYNC_KEY_KEY)){clearTimeout(syncTimer);syncTimer=setTimeout(()=>pushSheets(),900)}};
 /* Academic session starts in August (IST). Session 2026 = Aug 2026 – Jul 2027 */
 function curSess(){const d=new Date(Date.now()+19800000);return d.getUTCMonth()>=7?d.getUTCFullYear():d.getUTCFullYear()-1}
